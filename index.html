@@ -141,7 +141,7 @@ tr.tt td{font-weight:700;border-bottom:0}
     <h2 id="auth-title" style="margin:4px 0 8px;font:700 28px/1.1 'Barlow Semi Condensed',sans-serif">Accedi o Registrati</h2>
     <p class="mu" id="auth-sub" style="margin-bottom:16px">Inserisci la tua email e password per sincronizzare i turni in sicurezza.</p>
     
-    <div class="sg" style="margin-bottom:16px">
+    <div class="sg" id="auth-tabs" style="margin-bottom:16px">
       <button type="button" id="tab-login" onclick="switchAuthTab('login')" class="on">Accedi</button>
       <button type="button" id="tab-register" onclick="switchAuthTab('register')">Registrati</button>
     </div>
@@ -162,10 +162,14 @@ tr.tt td{font-weight:700;border-bottom:0}
     <div id="auth-logged-area" style="display:none;margin-top:10px">
       <p class="mu" style="font-weight:600;color:#1F9D55">Connesso come: <span id="auth-user-email"></span></p>
       <button class="bt" onclick="authLogout()" style="background:#D13438;margin-top:8px">Disconnetti</button>
+      <button class="bt" onclick="closeAuth()" style="background:var(--bg);color:var(--ink);border:1px solid var(--ln);margin-top:8px">Chiudi</button>
     </div>
 
-    <div style="margin-top:16px;border-top:1px solid var(--ln);padding-top:14px">
+    <div id="auth-bypass-box" style="margin-top:16px;border-top:1px solid var(--ln);padding-top:14px">
       <button onclick="bypassAuth()" style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--ln);background:var(--bg);font-weight:600;font-size:14px">Accedi senza registrazione</button>
+    </div>
+    <div id="auth-close-box" style="display:none;margin-top:8px">
+      <button onclick="closeAuth()" style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--ln);background:transparent;font-weight:600;font-size:14px">Chiudi</button>
     </div>
   </div>
 </div>
@@ -190,6 +194,35 @@ function switchAuthTab(m){
   // Nascondi il link password dimenticata se è in modalità registrazione
   document.getElementById('forgot-password-box').style.display = isRegMode ? 'none' : 'block';
   document.getElementById('auth-err').style.display = 'none';
+}
+
+function showAuthState(email){
+  const logged = !!email;
+  const d = (id,v)=>{ const el=document.getElementById(id); if(el) el.style.display=v; };
+  d('auth-tabs', logged?'none':'');
+  d('auth-form', logged?'none':'');
+  d('auth-sub', logged?'none':'');
+  d('auth-bypass-box', logged?'none':'');
+  d('auth-close-box', logged?'none':'block');
+  d('auth-logged-area', logged?'block':'none');
+  document.getElementById('auth-title').textContent = logged ? "Account" : (isRegMode ? "Crea un Account" : "Accedi");
+  if(logged) document.getElementById('auth-user-email').textContent = email;
+}
+
+async function openAuth(){
+  let email = null;
+  if(supabaseClient){
+    try{
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if(session) email = session.user.email;
+    }catch(e){}
+  }
+  showAuthState(email);
+  document.getElementById('auth-scr').classList.add('open');
+}
+
+function closeAuth(){
+  document.getElementById('auth-scr').classList.remove('open');
 }
 
 function bypassAuth(){
@@ -254,6 +287,7 @@ async function handleAuthSubmit(e){
     } else {
       const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password: pass });
       if(error) throw error;
+      localStorage.removeItem("agenda_local_user");
       document.getElementById('auth-scr').classList.remove('open');
       updateAuthBtnLabel(data.user.email);
       loadUserDataCloud(data.user.id);
@@ -264,29 +298,32 @@ async function handleAuthSubmit(e){
   }
 }
 
-function authLogout(){
+async function authLogout(){
   localStorage.removeItem("agenda_local_user");
-  if(supabaseClient) supabaseClient.auth.signOut();
+  if(supabaseClient){
+    try{ await supabaseClient.auth.signOut(); }catch(e){}
+  }
   location.reload();
 }
 
 function checkInitialAuth(){
   const localUser = localStorage.getItem("agenda_local_user");
-  if(localUser){
-    updateAuthBtnLabel(localUser);
-    return;
-  }
+  const openLogin = ()=>{ showAuthState(null); document.getElementById('auth-close-box').style.display='none'; document.getElementById('auth-scr').classList.add('open'); };
   if(supabaseClient){
     supabaseClient.auth.getSession().then(({data: {session}})=>{
       if(session){
         updateAuthBtnLabel(session.user.email);
         loadUserDataCloud(session.user.id);
+      } else if(localUser){
+        updateAuthBtnLabel(localUser === "Locale" ? "Modalità Locale" : localUser);
       } else {
-        document.getElementById('auth-scr').classList.add('open');
+        openLogin();
       }
     });
+  } else if(localUser){
+    updateAuthBtnLabel(localUser);
   } else {
-    document.getElementById('auth-scr').classList.add('open');
+    openLogin();
   }
 }
 
@@ -490,7 +527,7 @@ if(t.dataset.k)sheet(t.dataset.k);
 else if(t.dataset.n){S.m+=+t.dataset.n;if(S.m<0){S.m=11;S.y--}if(S.m>11){S.m=0;S.y++}render()}
 else if(t.dataset.v){S.v=t.dataset.v;render();scrollTo(0,0)}
 else if(t.dataset.a==="thm"){const cur=document.documentElement.getAttribute("data-theme");const isD=cur==="dark"||(!cur&&window.matchMedia("(prefers-color-scheme:dark)").matches);applyTheme(isD?"light":"dark")}
-else if(t.dataset.a==="auth-open"){document.getElementById('auth-scr').classList.add("open")}
+else if(t.dataset.a==="auth-open"){openAuth()}
 else if(t.dataset.tp){S.dt=S.dt===t.dataset.tp?"":t.dataset.tp;document.querySelectorAll(".tp").forEach(b=>b.classList.toggle("on",b.dataset.tp===S.dt));if(S.dt&&S.dt!=="pr"){const f=$("#f-u");if(f)f.value=""}}
 else if(t.dataset.x)closeS();
 else if(t.dataset.rm){S.rm=t.dataset.rm;render()}
