@@ -161,6 +161,11 @@ tr.tt td{font-weight:700;border-bottom:0}
 
     <div id="auth-logged-area" style="display:none;margin-top:10px">
       <p class="mu" style="font-weight:600;color:#1F9D55">Connesso come: <span id="auth-user-email"></span></p>
+      <div id="pw-change-box" style="margin:14px 0 6px;padding-top:12px;border-top:1px solid var(--ln);text-align:left">
+        <label style="margin-bottom:8px">Nuova password<input type="password" id="new-password" autocomplete="new-password" placeholder="almeno 8 caratteri"></label>
+        <div id="pw-msg" style="font-weight:600;font-size:13px;margin-bottom:8px;display:none"></div>
+        <button class="bt" onclick="changePassword()" style="margin-top:0">Cambia password</button>
+      </div>
       <button class="bt" onclick="authLogout()" style="background:#D13438;margin-top:8px">Disconnetti</button>
       <button class="bt" onclick="closeAuth()" style="background:var(--bg);color:var(--ink);border:1px solid var(--ln);margin-top:8px">Chiudi</button>
     </div>
@@ -179,6 +184,7 @@ tr.tt td{font-weight:700;border-bottom:0}
 const SUPABASE_URL = "https://qticbwkdeugyxjaodnxu.supabase.co"; 
 const SUPABASE_ANON_KEY = "sb_publishable_YXccw8IfeZB3i5BRiL-KUg_Yt3f4_FL"; 
 
+const RECOVERY_LINK = /type=recovery/.test(location.hash);
 let supabaseClient = null;
 if(SUPABASE_URL && SUPABASE_ANON_KEY && window.supabase){
   try{ supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSession: true, autoRefreshToken: true, storage: window.localStorage } }); }catch(e){}
@@ -219,6 +225,25 @@ async function openAuth(){
   }
   showAuthState(email);
   document.getElementById('auth-scr').classList.add('open');
+}
+
+async function changePassword(){
+  const inp = document.getElementById('new-password');
+  const msg = document.getElementById('pw-msg');
+  const pw = inp.value.trim();
+  msg.style.display = 'block';
+  msg.style.color = '#D13438';
+  if(pw.length < 8){ msg.textContent = "La password deve avere almeno 8 caratteri."; return; }
+  if(!supabaseClient){ msg.textContent = "Funzione cloud non attiva."; return; }
+  try{
+    const { error } = await supabaseClient.auth.updateUser({ password: pw });
+    if(error) throw error;
+    inp.value = '';
+    msg.style.color = '#1F9D55';
+    msg.textContent = "Password cambiata.";
+  }catch(e){
+    msg.textContent = e.message || "Errore nel cambio password.";
+  }
 }
 
 function closeAuth(){
@@ -370,6 +395,7 @@ function checkInitialAuth(tries){
       authReady = true;
       updateAuthBtnLabel(session.user.email);
       loadUserDataCloud(session.user.id);
+      if(RECOVERY_LINK) openAuth();
     } else {
       noSession();
     }
