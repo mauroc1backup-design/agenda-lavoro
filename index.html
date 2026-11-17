@@ -181,7 +181,7 @@ const SUPABASE_ANON_KEY = "sb_publishable_YXccw8IfeZB3i5BRiL-KUg_Yt3f4_FL";
 
 let supabaseClient = null;
 if(SUPABASE_URL && SUPABASE_ANON_KEY && window.supabase){
-  try{ supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); }catch(e){}
+  try{ supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSession: true, autoRefreshToken: true, storage: window.localStorage } }); }catch(e){}
 }
 
 let isRegMode = false;
@@ -287,9 +287,11 @@ async function handleAuthSubmit(e){
     } else {
       const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password: pass });
       if(error) throw error;
+      if(localStorage.getItem("agenda_local_user")) setMerge(true);
       localStorage.removeItem("agenda_local_user");
       document.getElementById('auth-scr').classList.remove('open');
       updateAuthBtnLabel(data.user.email);
+      authReady = true;
       loadUserDataCloud(data.user.id);
     }
   } catch(err){
@@ -306,26 +308,81 @@ async function authLogout(){
   location.reload();
 }
 
-function checkInitialAuth(){
-  const localUser = localStorage.getItem("agenda_local_user");
-  const openLogin = ()=>{ showAuthState(null); document.getElementById('auth-close-box').style.display='none'; document.getElementById('auth-scr').classList.add('open'); };
-  if(supabaseClient){
-    supabaseClient.auth.getSession().then(({data: {session}})=>{
-      if(session){
-        updateAuthBtnLabel(session.user.email);
-        loadUserDataCloud(session.user.id);
-      } else if(localUser){
-        updateAuthBtnLabel(localUser === "Locale" ? "Modalità Locale" : localUser);
-      } else {
-        openLogin();
+let authReady = false;
+
+/* Email della sessione salvata nel telefono (se esiste), anche senza rete */
+function storedAuthEmail(){
+  try{
+    for(let i=0;i<localStorage.length;i++){
+      const k=localStorage.key(i);
+      if(/^sb-.*-auth-token$/.test(k)){
+        const v=JSON.parse(localStorage.getItem(k)||"null");
+        if(v && v.refresh_token) return (v.user && v.user.email) || "Account";
       }
-    });
-  } else if(localUser){
-    updateAuthBtnLabel(localUser);
-  } else {
-    openLogin();
-  }
+    }
+  }catch(e){}
+  return null;
 }
+
+/* Carica la libreria Supabase se all'avvio non era disponibile (es. rete non ancora pronta) */
+async function ensureSupabase(){
+  if(supabaseClient) return true;
+  if(!window.supabase){
+    await new Promise(res=>{
+      const sc=document.createElement('script');
+      sc.src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
+      sc.onload=res; sc.onerror=res;
+      document.head.appendChild(sc);
+    });
+  }
+  if(window.supabase){
+    try{ supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSession: true, autoRefreshToken: true, storage: window.localStorage } }); }catch(e){}
+  }
+  return !!supabaseClient;
+}
+
+function checkInitialAuth(tries){
+  tries = tries || 0;
+  const localUser = localStorage.getItem("agenda_local_user");
+  const kept = storedAuthEmail();
+  const openLogin = ()=>{ showAuthState(null); document.getElementById('auth-close-box').style.display='none'; document.getElementById('auth-scr').classList.add('open'); };
+  const goLocal = ()=>{ updateAuthBtnLabel(localUser === "Locale" ? "Modalità Locale" : localUser); };
+  const retry = ()=>{ if(tries < 4) setTimeout(()=>checkInitialAuth(tries+1), 2500*(tries+1)); };
+
+  /* nessuna sessione valida adesso: se nel telefono ce n'e' una salvata NON si mostra il login, si riprova */
+  const noSession = ()=>{
+    if(kept){ updateAuthBtnLabel(kept); retry(); }
+    else if(localUser){ goLocal(); }
+    else { openLogin(); }
+  };
+
+  if(!supabaseClient){
+    if(kept || localUser){
+      if(kept) updateAuthBtnLabel(kept); else goLocal();
+      if(kept && tries < 4) setTimeout(()=>{ ensureSupabase().then(()=>checkInitialAuth(tries+1)); }, 2500*(tries+1));
+    } else {
+      openLogin();
+    }
+    return;
+  }
+  supabaseClient.auth.getSession().then(({data: {session}})=>{
+    if(session){
+      authReady = true;
+      updateAuthBtnLabel(session.user.email);
+      loadUserDataCloud(session.user.id);
+    } else {
+      noSession();
+    }
+  }).catch(noSession);
+}
+
+/* quando torna la rete o si riapre l'app, se la sessione salvata non era ancora stata verificata, riprova */
+function recheckAuth(){
+  if(authReady || !storedAuthEmail()) return;
+  ensureSupabase().then(()=>checkInitialAuth(0));
+}
+window.addEventListener('online', recheckAuth);
+document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) recheckAuth(); });
 
 function applyTheme(t){
   if(t==="dark"||t==="light"){document.documentElement.setAttribute("data-theme",t);localStorage.setItem("agenda_theme",t)}
@@ -351,7 +408,27 @@ const parse=s=>{s=(s||"").trim();if(!s)return 0;if(s.includes(":")){const p=s.sp
 let DB={d:{},i:{}};
 const store=()=>{try{localStorage.setItem("agenda_lavoro_data",JSON.stringify(DB));}catch(e){}};
 const loadLocalData=()=>{try{const s=localStorage.getItem("agenda_lavoro_data");if(s){DB=JSON.parse(s);if(Array.isArray(DB.s))SEDI=DB.s;if(Array.isArray(DB.t))TURNI=DB.t;}}catch(e){}};
-const save=()=>{store();};
+const MERGE_KEY="agenda_da_unire";
+const isMerge=()=>{try{return localStorage.getItem(MERGE_KEY)==="1"}catch(e){return false}};
+const setMerge=v=>{try{if(v)localStorage.setItem(MERGE_KEY,"1");else localStorage.removeItem(MERGE_KEY)}catch(e){}};
+const isEmptyVal=v=>v==null||v===""||v===0||(typeof v==="object"&&!Array.isArray(v)&&Object.keys(v).every(k=>isEmptyVal(v[k])));
+const hasData=o=>!!o&&((o.d&&Object.keys(o.d).length>0)||!!o.ro||(o.i&&Object.keys(o.i).some(y=>!isEmptyVal(o.i[y])))||(o.rt&&Object.keys(o.rt).some(k=>!isEmptyVal(o.rt[k]))));
+/* Unisce i dati del cloud con quelli del telefono: in caso di conflitto vincono quelli del telefono (le modifiche piu' recenti) */
+function mergeDB(c,l){
+  const r=Object.assign({},c||{});
+  Object.keys(l||{}).forEach(k=>{
+    const lv=l[k],cv=r[k];
+    if(k==="d"&&lv&&typeof lv==="object"){r.d=Object.assign({},cv||{},lv)}
+    else if(["i","rt","rf","fs"].includes(k)&&lv&&typeof lv==="object"&&!Array.isArray(lv)){
+      const o=Object.assign({},cv&&typeof cv==="object"?cv:{});
+      Object.keys(lv).forEach(sk=>{if(!(isEmptyVal(lv[sk])&&o[sk]!==undefined&&!isEmptyVal(o[sk])))o[sk]=lv[sk]});
+      r[k]=o}
+    else if((k==="s"||k==="t")&&Array.isArray(lv)){r[k]=Array.isArray(cv)?cv.concat(lv.filter(x=>!cv.includes(x))):lv.slice()}
+    else if(lv!==undefined){r[k]=lv}
+  });
+  return r;
+}
+const save=(force)=>{store();saveUserDataCloud(force===true);};
 
 const now=new Date(),S={y:now.getFullYear(),m:now.getMonth(),v:"cal"};
 const ini=y=>DB.i[y]||(DB.i[y]={fc:0,fp:0,sc:0,sp:0,eo:0,cg:0});
@@ -443,7 +520,7 @@ const b=rotBuild(r,c[0]);if(b.err)return er(b.err);
 if(m)m.textContent="";
 ask('Trovato: '+esc(c[0].n)+', gruppo '+c[0].g+'. Caricare?',()=>{DB.ro=b.ro;closeS();rotApply(S.y)})}
 
-function doReset(){DB.d={};DB.i={};DB.rt={};DB.rf={};DB.fs={};delete DB.ro;delete DB.s;delete DB.t;SEDI=SEDI0.slice();TURNI=TURNI0.slice();fillTl();save();render()}
+function doReset(){DB.d={};DB.i={};DB.rt={};DB.rf={};DB.fs={};delete DB.ro;delete DB.s;delete DB.t;SEDI=SEDI0.slice();TURNI=TURNI0.slice();fillTl();save(true);render()}
 
 function storico(){const y=S.y,i=ini(y);let cf=0,cs=0,cr=0,cc=0,ct=0;const H=["Mese","Presenze","Ferie usate","Ferie residue","Festività soppresse usate","Festività soppresse residue","Congedi","Malattie","RCO","Straord.","Pagato","A credito","Rettifica","Esubero ore"].concat(SEDI.map(cap)),tot={pr:0,fe:0,fs:0,cg:0,ma:0,rc:0,ot:0,cr:0,sd:{}},v=n=>n||"–",hv=n=>n?fmt(n):"–";
 let rows=MN.map((nm,m)=>{const s=st(y,m);cf+=s.fe;cs+=s.fs;cr+=s.rc;cc+=s.cr;ct+=rtv(y,m);["pr","fe","fs","cg","ma","rc","ot","cr"].forEach(k=>tot[k]+=s[k]);SEDI.forEach(z=>tot.sd[z]=(tot.sd[z]||0)+(s.sd[z]||0));
@@ -499,28 +576,52 @@ function ask(msg,ok,no){S.cf=ok;S.cx=no;$("#cfm").innerHTML='<h2>Confermi?</h2><
 
 const RZ={d:["i giorni",()=>{DB.d={}}],i:["i saldi",()=>{DB.i={};DB.rt={}}],t:["i turni",()=>{delete DB.t;DB.fs={};TURNI=TURNI0.slice();fillTl()}],s:["le sedi",()=>{delete DB.s;SEDI=SEDI0.slice()}],r:["la rotazione",()=>{delete DB.ro}]};
 
+let syncing=false;
+/* Sincronizza telefono e cloud: scarica, unisce se ci sono modifiche non ancora caricate, poi carica */
 async function loadUserDataCloud(userId){
-  if(!supabaseClient) return;
+  if(!supabaseClient||syncing) return;
+  syncing=true;
   try {
-    const { data, error } = await supabaseClient.from('user_agendas').select('content').eq('user_id', userId).single();
-    if(data && data.content){
-      DB = data.content;
-      if(Array.isArray(DB.s)) SEDI = DB.s;
-      if(Array.isArray(DB.t)) TURNI = DB.t;
-      fillTl();
-      render();
+    const { data, error } = await supabaseClient.from('user_agendas').select('content').eq('user_id', userId).maybeSingle();
+    if(error) throw error;
+    const cloud = data && data.content;
+    const cloudHas = hasData(cloud);
+    const merged = isMerge();
+    if(cloudHas){ DB = merged ? mergeDB(cloud, DB) : cloud; }
+    if(Array.isArray(DB.s)) SEDI = DB.s;
+    if(Array.isArray(DB.t)) TURNI = DB.t;
+    store();
+    fillTl();
+    render();
+    if(merged || (!cloudHas && hasData(DB))){
+      const r = await supabaseClient.from('user_agendas').upsert({ user_id: userId, content: DB }, { onConflict: 'user_id' });
+      if(r.error) throw r.error;
+      setMerge(false);
     }
-  } catch(e){}
+  } catch(e){
+    /* offline o errore: i dati restano sul telefono e si riprova appena possibile */
+  } finally { syncing = false; }
 }
-
-async function saveUserDataCloud(){
+async function saveUserDataCloud(force){
   if(!supabaseClient) return;
   try {
     const { data: { session } } = await supabaseClient.auth.getSession();
-    if(!session) return;
-    await supabaseClient.from('user_agendas').upsert({ user_id: session.user.id, content: DB }, { onConflict: 'user_id' });
+    if(!session){ setMerge(true); return; }
+    if(isMerge() && !force){ await loadUserDataCloud(session.user.id); return; }
+    const { error } = await supabaseClient.from('user_agendas').upsert({ user_id: session.user.id, content: DB }, { onConflict: 'user_id' });
+    if(error) throw error;
+    if(force) setMerge(false);
+  } catch(e){ setMerge(true); }
+}
+async function trySync(){
+  if(!supabaseClient||!isMerge()) return;
+  try {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if(session) await loadUserDataCloud(session.user.id);
   } catch(e){}
 }
+window.addEventListener('online', trySync);
+document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) trySync(); });
 
 document.addEventListener("click",e=>{const t=e.target.closest("[data-k],[data-n],[data-v],[data-tp],[data-a],[data-x],[data-del],[data-rm],[data-rt],[data-ra],[data-cf],[data-rz]");if(!t)return;
 if(t.dataset.k)sheet(t.dataset.k);
@@ -538,18 +639,18 @@ else if(t.dataset.a==="imp")ask('Importare residui?',imp);
 else if(t.dataset.a==="rot")ask('Compilare?',()=>rotApply(S.y));
 else if(t.dataset.a==="rol")rolSheet();
 else if(t.dataset.a==="rox")closeS();
-else if(t.dataset.rz){const z=RZ[t.dataset.rz];ask('Ripulire?',()=>{z[1]();save();saveUserDataCloud();render()})}
+else if(t.dataset.rz){const z=RZ[t.dataset.rz];ask('Ripulire?',()=>{z[1]();save();render()})}
 else if(t.dataset.a==="rof")rolGo();
 else if(t.dataset.a==="rst")ask('Cancellare tutto?',doReset);
-else if(t.dataset.a==="rclr"){const k=S.y+"-"+pad(S.rmo+1);ask('Azzerare?',()=>{if(DB.rt)delete DB.rt[k];save();saveUserDataCloud();closeS();render()})}
-else if(t.dataset.a==="rsv"){const y=S.y,m=S.rmo,cur=rtv(y,m),add=$("#r-v").value.trim();let n=null;if(add)n=(S.ra||1)*parse(add);if(n===null)return;const k=y+"-"+pad(m+1);ask('Applicare?',()=>{DB.rt=DB.rt||{};if(n)DB.rt[k]=n;else delete DB.rt[k];save();saveUserDataCloud();closeS();render()})}
-else if(t.dataset.del){const q=t.dataset.del.split(":"),w=q[0],A=w==="t"?TURNI:SEDI;ask('Eliminare?',()=>{A.splice(+q[1],1);DB[w]=A;save();saveUserDataCloud();fillTl();render()})}
-else if(t.dataset.a==="addt"||t.dataset.a==="addz"){const z=t.dataset.a==="addz",v=$(z?"#n-z":"#n-t").value.trim();if(!v)return;const A=z?SEDI:TURNI,vv=z?v.toUpperCase():v;if(A.map(String).includes(vv))return;const fs=z?"":$("#n-f").value;ask('Aggiungere?',()=>{A.push(vv);if(fs){DB.fs=DB.fs||{};DB.fs[vv]=fs}if(!z)A.sort((a,b)=>String(a).localeCompare(String(b),"it",{numeric:true}));DB[z?"s":"t"]=A;save();saveUserDataCloud();fillTl();render()})}
-else if(t.dataset.a==="clr"){delete DB.d[S.k];save();saveUserDataCloud();closeS();render()}
+else if(t.dataset.a==="rclr"){const k=S.y+"-"+pad(S.rmo+1);ask('Azzerare?',()=>{if(DB.rt)delete DB.rt[k];save();closeS();render()})}
+else if(t.dataset.a==="rsv"){const y=S.y,m=S.rmo,cur=rtv(y,m),add=$("#r-v").value.trim();let n=null;if(add)n=(S.ra||1)*parse(add);if(n===null)return;const k=y+"-"+pad(m+1);ask('Applicare?',()=>{DB.rt=DB.rt||{};if(n)DB.rt[k]=n;else delete DB.rt[k];save();closeS();render()})}
+else if(t.dataset.del){const q=t.dataset.del.split(":"),w=q[0],A=w==="t"?TURNI:SEDI;ask('Eliminare?',()=>{A.splice(+q[1],1);DB[w]=A;save();fillTl();render()})}
+else if(t.dataset.a==="addt"||t.dataset.a==="addz"){const z=t.dataset.a==="addz",v=$(z?"#n-z":"#n-t").value.trim();if(!v)return;const A=z?SEDI:TURNI,vv=z?v.toUpperCase():v;if(A.map(String).includes(vv))return;const fs=z?"":$("#n-f").value;ask('Aggiungere?',()=>{A.push(vv);if(fs){DB.fs=DB.fs||{};DB.fs[vv]=fs}if(!z)A.sort((a,b)=>String(a).localeCompare(String(b),"it",{numeric:true}));DB[z?"s":"t"]=A;save();fillTl();render()})}
+else if(t.dataset.a==="clr"){delete DB.d[S.k];save();closeS();render()}
 else if(t.dataset.a==="sv"){const v={t:S.dt||undefined,u:(S.dt&&S.dt!=="pr")?undefined:($("#f-u").value.trim()||undefined),b:$("#f-b").value.trim().toUpperCase()||undefined,o:parse($("#f-o").value)||undefined,on:$("#f-on").value.trim()||undefined,c:$("#f-c").checked||undefined,r:$("#f-r").value||undefined};
-Object.keys(v).forEach(q=>v[q]===undefined&&delete v[q]);if(Object.keys(v).length)DB.d[S.k]=v;else delete DB.d[S.k];save();saveUserDataCloud();closeS();render()}});
+Object.keys(v).forEach(q=>v[q]===undefined&&delete v[q]);if(Object.keys(v).length)DB.d[S.k]=v;else delete DB.d[S.k];save();closeS();render()}});
 
-document.addEventListener("change",e=>{const t=e.target,i=ini(S.y);if(t.id==="ro-f"){const fn=$("#ro-fn");if(fn)fn.textContent=t.files&&t.files[0]?t.files[0].name:""}else if(t.dataset.f){const k=t.dataset.f,nv=Math.max(0,+t.value||0);i[k]=nv;save();saveUserDataCloud();render()}else if(t.dataset.e){i.eo=parse(t.value);save();saveUserDataCloud();render()}else if(t.id==="r-m")rsheet(+t.value)});
+document.addEventListener("change",e=>{const t=e.target,i=ini(S.y);if(t.id==="ro-f"){const fn=$("#ro-fn");if(fn)fn.textContent=t.files&&t.files[0]?t.files[0].name:""}else if(t.dataset.f){const k=t.dataset.f,nv=Math.max(0,+t.value||0);i[k]=nv;save();render()}else if(t.dataset.e){i.eo=parse(t.value);save();render()}else if(t.id==="r-m")rsheet(+t.value)});
 const fillTl=()=>{$("#tl").innerHTML=TURNI.map(t=>'<option value="'+t+'">').join("")};fillTl();
 
 window.addEventListener("load",()=>{
