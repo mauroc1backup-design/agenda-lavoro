@@ -1,0 +1,13 @@
+{
+  "background_color": "#ffffff",
+  "dir": "ltr",
+  "display": "standalone",
+  "name": "mauroc1backup-design.github",
+  "orientation": "any",
+  "scope": "/",
+  "short_name": "Agenda Lavoro",
+  "start_url": "https://mauroc1backup-design.github.io/agenda-lavoro/",
+  "theme_color": "#12263A",
+  "id": "/agenda-lavoro/",
+  "description": "Agenda turni di lavoro"
+}
