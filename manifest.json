@@ -1,13 +1,18 @@
 {
-  "background_color": "#ffffff",
-  "dir": "ltr",
-  "display": "standalone",
-  "name": "Agenda Lavoro",
-  "orientation": "any",
-  "scope": "/agenda-lavoro/",
+  "id": "./",
+  "name": "Agenda di Lavoro",
   "short_name": "Agenda",
-  "start_url": "https://mauroc1backup-design.github.io/agenda-lavoro/",
+  "description": "Agenda di lavoro con turni, ferie, riepiloghi mensili e annuali, sincronizzata su cloud.",
+  "lang": "it",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#12263A",
   "theme_color": "#12263A",
-  "id": "/agenda-lavoro/",
-  "description": "Agenda turni di lavoro"
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
 }
