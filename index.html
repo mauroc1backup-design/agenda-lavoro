@@ -520,7 +520,15 @@ return '<div class="tls">'+tile(s.pr,"Giorni di presenza",T.pr[2])+tile(s.fe,"Fe
 const rv=n=>n?(n>0?"+":"")+fmt(n):"–";
 const rtv=(y,m)=>(DB.rt&&DB.rt[y+"-"+pad(m+1)])||0;
 function esu(y,m){const i=ini(y);let c=0,r=0,t=0;for(let q=0;q<=m;q++){const s=st(y,q);c+=s.cr;r+=s.rc;t+=rtv(y,q)}return i.eo+c-r*390+t}
-function imp(){const y=S.y,p=ini(y-1),s=st(y-1,null),i=ini(y);i.fp=Math.max(0,p.fc+p.fp-s.fe);i.sp=Math.max(0,p.sc+p.sp-s.fs);i.eo=Math.max(0,esu(y-1,11));i.cg=Math.max(0,p.cg-s.cg);save();render()}
+function impCalc(){const y=S.y,p=ini(y-1),s=st(y-1,null);return{fp:Math.max(0,p.fc+p.fp-s.fe),sp:Math.max(0,p.sc+p.sp-s.fs),eo:Math.max(0,esu(y-1,11)),cg:Math.max(0,p.cg-s.cg)}}
+function imp(){Object.assign(ini(S.y),impCalc());save();render()}
+const BDL={fp:"Ferie prec.",fc:"Ferie corr.",sp:"Fest. soppr. prec.",sc:"Fest. soppr. corr.",cg:"Congedi",eo:"Esubero iniziale"};
+const bdV=(k,v)=>k==="eo"?fmt(v):String(+(+v).toFixed(2));
+function bdDiff(n){const i=ini(S.y);return Object.keys(n).filter(k=>n[k]!==i[k]).map(k=>BDL[k]+": <b>"+bdV(k,i[k])+"</b> → <b>"+bdV(k,n[k])+"</b>")}
+function impAsk(){const d=bdDiff(impCalc());ask("<b>Importa residui</b> dall'anno "+(S.y-1)+" all'anno "+S.y+". I valori attuali verranno sostituiti:<br>"+(d.length?d.join("<br>"):"nessuna differenza rispetto ai valori attuali"),imp)}
+let PEND={};
+function pendSet(t){if(t.dataset.f)PEND[t.dataset.f]=Math.max(0,+t.value||0);else if(t.dataset.e)PEND.eo=parse(t.value);else return;const b=$("#bd-pend");if(b)b.style.display="flex"}
+function bdSave(){const n=Object.assign({},PEND),d=bdDiff(n);if(!d.length){PEND={};render();return}ask("<b>Saldi di inizio anno "+S.y+"</b><br>"+d.join("<br>"),()=>{Object.assign(ini(S.y),n);PEND={};save();render()})}
 
 function rsheet(m){const y=S.y,cur=rtv(y,m);S.rmo=m;S.ra=1;
 $("#sh").innerHTML='<h2>Rettifica ore</h2><p class="mu">Allinea l’esubero ore ai dati reali della busta paga.</p><label style="margin-top:12px">Mese<select id="r-m">'+MN.map((n,q)=>'<option value="'+q+'"'+(q===m?' selected':'')+'>'+n+'</option>').join("")+'</select></label>'+
@@ -615,9 +623,9 @@ blk("Festività soppresse",i.sc,i.sp,s.fs,T.fs[2])+
 '<div class="cd"><h3>Esubero ore</h3><div class="big">'+fmt(eo)+'<span class="mu"> ore</span></div></div>'+
 '<div class="cd"><h3>Congedi e malattia</h3><div class="rw"><span>Congedi rimasti</span><b>'+(i.cg-s.cg)+'</b></div><div class="rw"><span>Giorni di malattia</span><b>'+s.ma+'</b></div></div>'}
 
-function bd(){const y=S.y,i=ini(y),f=(k,l)=>'<label>'+l+'<input type="number" inputmode="decimal" min="0" data-f="'+k+'" value="'+i[k]+'"></label>',chips=(A,w)=>'<div class="chs">'+A.map((x,n)=>'<span class="cp"'+(w==="t"&&fas0(x)?' style="border-left:4px solid '+FC[fas0(x)][2]+'"':'')+'>'+esc(w==="s"?cap(String(x)):x)+'<button data-del="'+w+':'+n+'">×</button></span>').join("")+'</div>';
+function bd(){PEND={};const y=S.y,i=ini(y),f=(k,l)=>'<label>'+l+'<input type="number" inputmode="decimal" min="0" data-f="'+k+'" value="'+i[k]+'"></label>',chips=(A,w)=>'<div class="chs">'+A.map((x,n)=>'<span class="cp"'+(w==="t"&&fas0(x)?' style="border-left:4px solid '+FC[fas0(x)][2]+'"':'')+'>'+esc(w==="s"?cap(String(x)):x)+'<button data-del="'+w+':'+n+'">×</button></span>').join("")+'</div>';
 return '<div class="cd"><h3>Autenticazione / Sincronizzazione</h3><button class="bt" data-a="auth-open" style="margin:0">Gestisci Account</button></div>'+
-'<div class="cd"><h3>Saldi di inizio anno '+y+'</h3><button class="bt" data-a="imp" style="margin:0 0 14px">Importa residui</button><div class="fm">'+f("fp","Ferie prec.")+f("fc","Ferie corr.")+f("sp","Fest. soppr. prec.")+f("sc","Fest. soppr. corr.")+f("cg","Congedi")+'<label>Esubero iniziale<input data-e="1" value="'+fmt(i.eo)+'"></label></div></div>'+
+'<div class="cd"><h3>Saldi di inizio anno '+y+'</h3><button class="bt" data-a="imp" style="margin:0 0 14px">Importa residui</button><div class="fm">'+f("fp","Ferie prec.")+f("fc","Ferie corr.")+f("sp","Fest. soppr. prec.")+f("sc","Fest. soppr. corr.")+f("cg","Congedi")+'<label>Esubero iniziale<input data-e="1" value="'+fmt(i.eo)+'"></label></div><div id="bd-pend" style="display:none;gap:8px;margin-top:12px"><button class="bt" data-a="bdx" style="margin:0;flex:1;background:var(--bg);color:var(--ink);border:1px solid var(--ln)">Annulla</button><button class="bt" data-a="bds" style="margin:0;flex:1">Salva modifiche</button></div></div>'+
 '<div class="cd"><h3>Rotazione</h3>'+(DB.ro?'<button class="bt" data-a="rot" style="margin:0 0 8px">Compila</button>':'')+'<button class="bt" data-a="rol" style="margin:0">Carica rotazione</button></div>'+
 '<div class="cd"><h3>Turni</h3><div class="ad"><input id="n-t" placeholder="Nuovo turno"><select id="n-f" style="width:auto;margin:0;flex:none"><option value="m">Mattina</option><option value="p">Pomeriggio</option><option value="c">Centrale</option><option value="">Nessuna</option></select><button data-a="addt">Aggiungi</button></div>'+chips(TURNI,"t")+'</div>'+
 '<div class="cd"><h3>Sedi</h3><div class="ad"><input id="n-z" placeholder="Nuova sede"><button data-a="addz">Aggiungi</button></div>'+chips(SEDI,"s")+'</div>'+
@@ -735,7 +743,9 @@ else if(t.dataset.rm){S.rm=t.dataset.rm;render()}
 else if(t.dataset.cf){const f=t.dataset.cf==="1"?S.cf:S.cx;S.cf=S.cx=null;$("#cf").classList.remove("open");if(f)f()}
 else if(t.dataset.rt!==undefined)rsheet(+t.dataset.rt);
 else if(t.dataset.ra){S.ra=+t.dataset.ra;document.querySelectorAll("[data-ra]").forEach(b=>b.classList.toggle("on",+b.dataset.ra===S.ra))}
-else if(t.dataset.a==="imp")ask('Importare residui?',imp);
+else if(t.dataset.a==="imp")impAsk();
+else if(t.dataset.a==="bds")bdSave();
+else if(t.dataset.a==="bdx"){PEND={};render()}
 else if(t.dataset.a==="rot")rotFromSheet();
 else if(t.dataset.a==="rocg"){const f=($("#ro-from")&&$("#ro-from").value)||todayKey();closeS();rotApplyFrom(f)}
 else if(t.dataset.a==="rol")rolSheet();
@@ -751,7 +761,8 @@ else if(t.dataset.a==="clr"){delete DB.d[S.k];save();closeS();render()}
 else if(t.dataset.a==="sv"){const v={t:S.dt||undefined,u:(S.dt&&S.dt!=="pr")?undefined:($("#f-u").value.trim()||undefined),b:$("#f-b").value.trim().toUpperCase()||undefined,o:parse($("#f-o").value)||undefined,on:$("#f-on").value.trim()||undefined,c:$("#f-c").checked||undefined,r:$("#f-r").value||undefined};
 Object.keys(v).forEach(q=>v[q]===undefined&&delete v[q]);if(v.t==="ri")v.m=1;if(Object.keys(v).length)DB.d[S.k]=v;else delete DB.d[S.k];save();closeS();render()}});
 
-document.addEventListener("change",e=>{const t=e.target,i=ini(S.y);if(t.id==="ro-f"){const fn=$("#ro-fn");if(fn)fn.textContent=t.files&&t.files[0]?t.files[0].name:""}else if(t.dataset.f){const k=t.dataset.f,nv=Math.max(0,+t.value||0);i[k]=nv;save();render()}else if(t.dataset.e){i.eo=parse(t.value);save();render()}else if(t.id==="r-m")rsheet(+t.value)});
+document.addEventListener("input",e=>{pendSet(e.target)});
+document.addEventListener("change",e=>{const t=e.target,i=ini(S.y);if(t.id==="ro-f"){const fn=$("#ro-fn");if(fn)fn.textContent=t.files&&t.files[0]?t.files[0].name:""}else if(t.dataset.f||t.dataset.e){pendSet(t)}else if(t.id==="r-m")rsheet(+t.value)});
 const fillTl=()=>{$("#tl").innerHTML=TURNI.map(t=>'<option value="'+t+'">').join("")};fillTl();
 
 window.addEventListener("load",()=>{
