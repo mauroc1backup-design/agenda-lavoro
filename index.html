@@ -110,6 +110,77 @@ tr.tt td{font-weight:700;border-bottom:0}
 .auth-box{max-width:420px;width:100%;margin:0 auto;background:var(--sf);border:1px solid var(--ln);border-radius:18px;padding:24px 20px;box-shadow:0 10px 30px rgba(0,0,0,.08);text-align:center}
 @media(prefers-reduced-motion:reduce){.sh,.bd,.dl{transition:none}}
 </style>
+<style id="rpt-css">
+#rpt{position:fixed;inset:0;z-index:9999;background:#E6E9EE;display:none;flex-direction:column;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:#10202E}
+#rpt.open{display:flex}
+#rpt .rbar{display:flex;gap:8px;align-items:center;padding:10px 12px;background:#12263A;color:#fff;flex:0 0 auto}
+#rpt .rbar b{flex:1;font-size:14px}
+#rpt .rbar button{border:0;border-radius:8px;padding:9px 12px;font-weight:700;font-size:13px}
+#rpt .rbar .p{background:#F2A900;color:#12263A}
+#rpt .rbar .x{background:rgba(255,255,255,.16);color:#fff}
+#rpt .rscroll{flex:1;overflow:auto;padding:8px}
+#rpt .rsize{position:relative}
+#rpt .rpage{width:794px;height:1122px;background:#fff;box-sizing:border-box;padding:28px 34px;transform-origin:top left;box-shadow:0 2px 12px rgba(0,0,0,.22);font-size:12px;line-height:1.25;overflow:hidden;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+#rpt .rpage *{box-sizing:border-box}
+.rp-h{background:#12263A;color:#fff;border-radius:10px;padding:14px 18px;display:flex;justify-content:space-between;align-items:flex-end;border-bottom:4px solid #F2A900}
+.rp-h .k{font-size:10px;letter-spacing:.14em;text-transform:uppercase;opacity:.75}
+.rp-h h1{margin:2px 0 0;font-size:30px;line-height:1.05;font-weight:800}
+.rp-h .nm{font-size:13px;margin-top:4px;opacity:.9;font-weight:600}
+.rp-h .r{text-align:right;font-size:10.5px;opacity:.85;line-height:1.5}
+.rp-tl{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-top:10px}
+.rp-t{border:1px solid #DCE1E8;border-left:5px solid var(--c);border-radius:7px;padding:5px 8px;background:#fff}
+.rp-t b{display:block;font-size:20px;line-height:1.1;color:var(--c)}
+.rp-t span{font-size:9.5px;color:#5B6B7B}
+.rp-t.z{opacity:.4}
+.rp-s{margin-top:10px}
+.rp-s h2,.rp-cd h2{margin:0 0 5px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#12263A}
+.rp-wk,.rp-g{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.rp-wk{margin-bottom:3px}
+.rp-wk span{text-align:center;font-size:9.5px;font-weight:700;color:#5B6B7B}
+.rp-wk span.we{color:#D13438}
+.rp-c{height:52px;border:1.5px solid #DCE1E8;border-radius:6px;padding:3px 4px;display:flex;flex-direction:column;overflow:hidden}
+.rp-c.e{border:0}
+.rp-n{font-size:11px;font-weight:800}
+.rp-n.we{color:#D13438}
+.rp-l{align-self:flex-start;color:#fff;font-size:8.5px;font-weight:800;padding:1px 5px;border-radius:8px;margin-top:1px}
+.rp-b{margin-top:auto;display:flex;gap:3px;align-items:center;white-space:nowrap}
+.rp-u{font-size:10.5px;font-weight:700;color:#12263A}
+.rp-o{font-size:9px;font-weight:800;color:#B7791F}
+.rp-r{font-size:8.5px;font-weight:800;color:#12263A;background:#E5E9EF;border-radius:3px;padding:0 3px}
+.rp-lg{display:flex;flex-wrap:wrap;gap:3px 12px;margin-top:5px;font-size:9.5px;color:#5B6B7B}
+.rp-lg i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:4px;background:var(--c)}
+.rp-2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.rp-cd{border:1px solid #DCE1E8;border-radius:8px;padding:8px 10px}
+.rp-rw{display:flex;justify-content:space-between;padding:2px 0;font-size:12px}
+.rp-rw b{font-variant-numeric:tabular-nums}
+.rp-br{height:5px;background:#E5E9EF;border-radius:3px;margin:1px 0 4px}
+.rp-br i{display:block;height:100%;background:#12263A;border-radius:3px}
+.rp-tb{width:100%;border-collapse:collapse;font-size:11.5px}
+.rp-tb th{background:#12263A;color:#fff;font-size:9.5px;font-weight:700;padding:4px 5px;text-align:center;line-height:1.2}
+.rp-tb th:first-child{text-align:left;border-radius:6px 0 0 0}
+.rp-tb th:last-child{border-radius:0 6px 0 0}
+.rp-tb td{padding:4px 5px;text-align:center;border-bottom:1px solid #E5E9EF;font-variant-numeric:tabular-nums}
+.rp-tb td.l{text-align:left;font-weight:700}
+.rp-tb td.tot{font-weight:800;background:#F1F5F9}
+.rp-tb .neg{color:#D13438}
+.rp-eo{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.rp-eo div{border:1px solid #DCE1E8;border-radius:7px;padding:5px 6px;text-align:center}
+.rp-eo b{display:block;font-size:16px;line-height:1.15}
+.rp-eo span{font-size:9px;color:#5B6B7B}
+.rp-eo .fin{background:#12263A;border-color:#12263A;color:#fff}
+.rp-eo .fin span{color:#CBD5E1}
+.rp-f{margin-top:8px;font-size:9px;color:#7A8896;text-align:center}
+@media print{
+@page{size:A4;margin:0}
+html,body{height:auto!important;overflow:visible!important;background:#fff!important}
+body.rpt-open>*:not(#rpt){display:none!important}
+body.rpt-open #rpt{position:static;display:block;background:#fff;height:auto}
+#rpt .rbar{display:none}
+#rpt .rscroll{overflow:visible;padding:0}
+#rpt .rsize{width:auto!important;height:auto!important}
+#rpt .rpage{transform:none!important;box-shadow:none;height:1118px;page-break-after:avoid;break-after:avoid}
+}
+</style>
 </head>
 <body>
 <header>
@@ -131,6 +202,8 @@ tr.tt td{font-weight:700;border-bottom:0}
 <button data-v="res"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Residui</button>
 <button data-v="bd"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v6c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12v6c0 1.7 3.6 3 8 3v-6"/></svg>Banca dati</button>
 </nav>
+<div id="rpt"><div class="rbar"><b id="rpt-t">Report mensile</b><button class="x" data-a="rptx">Chiudi</button><button class="p" data-a="rptp">Stampa / Salva PDF</button></div><div class="rscroll"><div class="rsize"><div class="rpage" id="rpt-pg"></div></div></div></div>
+<input type="file" id="bk-f" accept=".json,application/json" style="display:none">
 <div id="ov"><div class="bd" data-x="1"></div><div class="sh" id="sh"></div></div>
 <div id="cf"><div class="bd" data-cf="0"></div><div class="dl" id="cfm"></div></div>
 
@@ -511,7 +584,7 @@ function cal(){
   return h;
 }
 
-function riep(){const seg='<div class="sg"><button data-rm="m" class="'+(S.rm!=="y"?"on":"")+'">Mese</button><button data-rm="y" class="'+(S.rm==="y"?"on":"")+'">Storico annuale</button></div>';return seg+(S.rm==="y"?storico():riepM())}
+function riep(){const seg='<div class="sg"><button data-rm="m" class="'+(S.rm!=="y"?"on":"")+'">Mese</button><button data-rm="y" class="'+(S.rm==="y"?"on":"")+'">Storico annuale</button></div>';return seg+(S.rm==="y"?storico():riepM()+'<div class="cd"><h3>Report mensile</h3><p class="mu" style="margin:0 0 10px">Riepilogo di una pagina da stampare o salvare in PDF.</p><button class="bt" data-a="rpt" style="margin:0">Crea PDF di '+RPT_MES[S.m]+' '+S.y+'</button></div>')}
 function riepM(){const s=st(S.y,S.m),tile=(n,l,c)=>'<div class="tl" style="--c:'+c+'"><b>'+n+'</b><span>'+l+'</span></div>',mx=Math.max(1,...SEDI.map(z=>s.sd[z]||0)),tr=SEDI.reduce((a,z)=>a+(s.sd[z]||0),0);
 return '<div class="tls">'+tile(s.pr,"Giorni di presenza",T.pr[2])+tile(s.fe,"Ferie usate",T.fe[2])+tile(s.fs,"Festività soppresse",T.fs[2])+tile(s.rc,"Giorni RCO",T.rc[2])+tile(s.cg,"Congedi",T.cg[2])+tile(s.ma,"Giorni di malattia",T.ma[2])+'</div>'+
 '<div class="cd"><h3>Straordinario del mese</h3><div class="rw"><span>Totale</span><b>'+fmt(s.ot)+'</b></div><div class="rw"><span>A credito</span><b>'+fmt(s.cr)+'</b></div><div class="rw"><span>Pagato</span><b>'+fmt(s.ot-s.cr)+'</b></div></div>'+
@@ -629,6 +702,7 @@ return '<div class="cd"><h3>Autenticazione / Sincronizzazione</h3><button class=
 '<div class="cd"><h3>Rotazione</h3>'+(DB.ro?'<button class="bt" data-a="rot" style="margin:0 0 8px">Compila</button>':'')+'<button class="bt" data-a="rol" style="margin:0">Carica rotazione</button></div>'+
 '<div class="cd"><h3>Turni</h3><div class="ad"><input id="n-t" placeholder="Nuovo turno"><select id="n-f" style="width:auto;margin:0;flex:none"><option value="m">Mattina</option><option value="p">Pomeriggio</option><option value="c">Centrale</option><option value="">Nessuna</option></select><button data-a="addt">Aggiungi</button></div>'+chips(TURNI,"t")+'</div>'+
 '<div class="cd"><h3>Sedi</h3><div class="ad"><input id="n-z" placeholder="Nuova sede"><button data-a="addz">Aggiungi</button></div>'+chips(SEDI,"s")+'</div>'+
+'<div class="cd"><h3>Backup dati</h3><p class="mu" style="margin:0 0 10px">Salva tutta l\'agenda in un file sul telefono, da conservare dove vuoi. Ultimo backup: '+bkLast()+'</p><button class="bt" data-a="bkx" style="margin-bottom:8px">Esporta backup</button><button class="bt" data-a="bki" style="margin:0;background:var(--bg);color:var(--ink);border:1px solid var(--ln)">Ripristina da backup</button></div>'+
 '<div class="cd"><h3>Ripulisci</h3>' +
 '<button class="bt" data-rz="d" style="margin-bottom:8px;background:var(--bg);color:var(--ink);border:1px solid var(--ln)">Giorni del calendario</button>' +
 '<button class="bt" data-rz="i" style="margin-bottom:8px;background:var(--bg);color:var(--ink);border:1px solid var(--ln)">Saldi, residui e rettifiche</button>' +
@@ -658,6 +732,98 @@ $("#sh").innerHTML='<h2>'+DN[dt.getDay()]+' '+p[2]+' '+MN[p[1]-1].toLowerCase()+
 $("#ov").classList.add("open")}
 
 const closeS=()=>$("#ov").classList.remove("open");
+/* ===== Report mensile PDF ===== */
+const RPT_MES=["Gennaio","Febbraio","Marzo","Aprile","Maggio","Giugno","Luglio","Agosto","Settembre","Ottobre","Novembre","Dicembre"];
+const RPT_HUE={pr:"#1F9D55",fe:"#D13438",ft:"#B02A30",fs:"#8B6FD6",ri:"#6B7280",ma:"#D6336C",rc:"#E8590C",ra:"#F08C00",ds:"#A61E4D",cg:"#1FA6B8",l1:"#8D6E63"};
+let RPT_TITLE="";
+function rptBuild(y,m){
+  const n=new Date(y,m+1,0).getDate(),off=(new Date(y,m,1).getDay()+6)%7,s=st(y,m),i=ini(y);
+  const nf=v=>String(+(+v).toFixed(2)).replace(".",",");
+  const A=(h,a)=>{const v=parseInt(h.slice(1),16);return "rgba("+(v>>16&255)+","+(v>>8&255)+","+(v&255)+","+a+")"};
+  const cnt={pr:0,fe:0,ft:0,fs:0,ri:0,ma:0,rc:0,ra:0,ds:0,cg:0,l1:0};let prevN=0;
+  for(let d=1;d<=n;d++){const k=key(y,m,d),x=DB.d[k]||{},t=tp(k);if(t&&t in cnt)cnt[t]++;if(x.t==="pr"&&x.a)prevN++}
+  const cu={fe:0,fs:0,cg:0,ma:0,rc:0,cr:0,rt:0};
+  for(let q=0;q<=m;q++){const z=st(y,q);cu.fe+=z.fe;cu.fs+=z.fs;cu.cg+=z.cg;cu.ma+=z.ma;cu.rc+=z.rc;cu.cr+=z.cr;cu.rt+=rtv(y,q)}
+  const tiles=[["Presenze",cnt.pr,RPT_HUE.pr],["Turni da confermare",prevN,"#64748B"],["Ferie",cnt.fe,RPT_HUE.fe],["RCO",cnt.rc,RPT_HUE.rc],["RCA",cnt.ra,RPT_HUE.ra],["Fest. soppresse",cnt.fs,RPT_HUE.fs],["Congedi",cnt.cg,RPT_HUE.cg],["Malattia",cnt.ma,RPT_HUE.ma],["Legge 104",cnt.l1,RPT_HUE.l1],["Don. sangue",cnt.ds,RPT_HUE.ds],["Festività",cnt.ft,RPT_HUE.ft],["Riposi",cnt.ri,RPT_HUE.ri]];
+  let tl="";tiles.forEach(a=>{tl+='<div class="rp-t'+(a[1]?'':' z')+'" style="--c:'+a[2]+'"><b>'+a[1]+'</b><span>'+a[0]+'</span></div>'});
+  let g='<i></i>'.repeat(0),cells="";
+  for(let q=0;q<off;q++)cells+='<div class="rp-c e"></div>';
+  for(let d=1;d<=n;d++){
+    const k=key(y,m,d),x=DB.d[k]||{},t=tp(k),we=((off+d-1)%7)>4;
+    let c=null,l="";
+    if(x.t==="pr"&&x.a){const f=fas(k,x.u),fc=f&&FC[f];c=fc?fc[2]:"#64748B";l=fc?fc[1]:"Turno"}
+    else if(t==="pr"){c=RPT_HUE.pr;l="Presente"}
+    else if(t&&RPT_HUE[t]){c=RPT_HUE[t];l=T[t][1]}
+    cells+='<div class="rp-c"'+(c?' style="border-color:'+c+';background:'+A(c,.13)+'"':'')+'><span class="rp-n'+(we?' we':'')+'">'+d+'</span>'+(c?'<span class="rp-l" style="background:'+c+'">'+esc(l)+'</span>':'')+'<div class="rp-b">'+(x.u?'<span class="rp-u">'+esc(String(x.u))+'</span>':'')+(x.o?'<span class="rp-o">+'+fmt(x.o)+'</span>':'')+(x.r?'<span class="rp-r">'+esc(String(x.r).slice(0,3).toUpperCase())+'</span>':'')+'</div></div>'
+  }
+  const wk="LMMGVSD".split("").map((c,q)=>'<span'+(q>4?' class="we"':'')+'>'+c+'</span>').join("");
+  const lg=[["Mattina",FC.m[2]],["Pomeriggio",FC.p[2]],["Centrale",FC.c[2]],["Presenza confermata",RPT_HUE.pr],["Ferie / festività / assenze",RPT_HUE.fe],["RCO / RCA",RPT_HUE.rc]].map(a=>'<span><i style="--c:'+a[1]+'"></i>'+a[0]+'</span>').join("")+'<span><b style="color:#B7791F">+h:mm</b> straordinario</span><span><b>ABC</b> sede di trasferta</span>';
+  const sd=Object.keys(s.sd).filter(z=>s.sd[z]).sort((a,b)=>s.sd[b]-s.sd[a]),mxs=Math.max(1,...sd.map(z=>s.sd[z])),trN=sd.reduce((a,z)=>a+s.sd[z],0);
+  const sdv=sd.slice(0,4).map(z=>[cap(String(z)),s.sd[z]]);if(sd.length>4)sdv.push(["Altre sedi ("+(sd.length-4)+")",sd.slice(4).reduce((a,z)=>a+s.sd[z],0)]);
+  const trf=sdv.length?sdv.map(a=>'<div class="rp-rw"><span>'+esc(a[0])+'</span><b>'+a[1]+'</b></div><div class="rp-br"><i style="width:'+(a[1]/mxs*100)+'%"></i></div>').join(""):'<div class="rp-rw"><span>Nessuna trasferta nel mese</span></div>';
+  const rtm=rtv(y,m);
+  const calc=b=>{const up=Math.min(b.pi,b.us),uc=Math.max(0,b.us-b.pi);return{rp:b.pi-up,rc:b.ci-uc,tot:b.pi+b.ci-b.us}};
+  const ng=v=>v<0?' neg':'';
+  const tr=(lab,b)=>{const c=calc(b);return '<tr><td class="l">'+lab+'</td><td>'+nf(b.pi)+'</td><td>'+nf(b.ci)+'</td><td>'+nf(b.us)+'</td><td>'+nf(c.rp)+'</td><td class="'+ng(c.rc)+'">'+nf(c.rc)+'</td><td class="tot'+ng(c.tot)+'">'+nf(c.tot)+'</td></tr>'};
+  const cgR=i.cg-cu.cg;
+  const eo=esu(y,m);
+  const eb=[["Iniziale",fmt(i.eo)],["+ Straordinari a credito",fmt(cu.cr)],["− RCO usati ("+cu.rc+")",fmt(cu.rc*390)],["± Rettifiche",(cu.rt>0?"+":"")+fmt(cu.rt)]].map(a=>'<div><b>'+a[1]+'</b><span>'+a[0]+'</span></div>').join("")+'<div class="fin"><b>'+fmt(eo)+'</b><span>= Saldo a fine mese (ore)</span></div>';
+  const nm=DB.ro&&DB.ro.n?esc(String(DB.ro.n)):"";
+  const now2=new Date(),gen=pad(now2.getDate())+"/"+pad(now2.getMonth()+1)+"/"+now2.getFullYear()+" alle "+pad(now2.getHours())+":"+pad(now2.getMinutes());
+  return '<div class="rp-h"><div><div class="k">Report mensile</div><h1>'+RPT_MES[m]+' '+y+'</h1>'+(nm?'<div class="nm">'+nm+'</div>':'')+'</div><div class="r">Agenda di Lavoro<br>Generato il '+gen+'</div></div>'+
+  '<div class="rp-tl">'+tl+'</div>'+
+  '<div class="rp-s rp-cal"><h2>Calendario del mese</h2><div class="rp-wk">'+wk+'</div><div class="rp-g">'+cells+'</div><div class="rp-lg">'+lg+'</div></div>'+
+  '<div class="rp-2"><div class="rp-cd"><h2>Straordinario del mese</h2><div class="rp-rw"><span>Totale</span><b>'+fmt(s.ot)+'</b></div><div class="rp-rw"><span>A credito</span><b>'+fmt(s.cr)+'</b></div><div class="rp-rw"><span>Pagato</span><b>'+fmt(s.ot-s.cr)+'</b></div>'+(rtm?'<div class="rp-rw"><span>Rettifica esubero del mese</span><b>'+(rtm>0?"+":"")+fmt(rtm)+'</b></div>':'')+'</div>'+
+  '<div class="rp-cd"><h2>Trasferte del mese ('+trN+')</h2>'+trf+'</div></div>'+
+  '<div class="rp-s"><h2>Saldi a fine '+RPT_MES[m].toLowerCase()+' (come in Banca dati)</h2><table class="rp-tb"><thead><tr><th>Voce</th><th>Iniziali<br>anno prec.</th><th>Iniziali<br>anno corr.</th><th>Usati da<br>inizio anno</th><th>Residui<br>anno prec.</th><th>Residui<br>anno corr.</th><th>Totale<br>residuo</th></tr></thead><tbody>'+
+  tr("Ferie",{pi:i.fp,ci:i.fc,us:cu.fe})+tr("Festività soppresse",{pi:i.sp,ci:i.sc,us:cu.fs})+
+  '<tr><td class="l">Congedi</td><td>–</td><td>'+nf(i.cg)+'</td><td>'+nf(cu.cg)+'</td><td>–</td><td class="'+ng(cgR)+'">'+nf(cgR)+'</td><td class="tot'+ng(cgR)+'">'+nf(cgR)+'</td></tr>'+
+  '<tr><td class="l">Malattia (giorni)</td><td>–</td><td>–</td><td>'+nf(cu.ma)+'</td><td>–</td><td>–</td><td class="tot">–</td></tr></tbody></table></div>'+
+  '<div class="rp-s"><h2>Esubero ore a fine '+RPT_MES[m].toLowerCase()+'</h2><div class="rp-eo">'+eb+'</div></div>'+
+  '<div class="rp-f">Residui = iniziali − usati (si consumano prima i giorni dell\'anno precedente). Presenze e assenze contano solo se confermate.</div>'
+}
+function rptFit(){const rs=document.querySelector("#rpt .rsize"),pg=$("#rpt-pg");if(!rs||!pg)return;const sc=Math.min(1,(window.innerWidth-16)/794);rs.style.width=(794*sc)+"px";rs.style.height=(1122*sc)+"px";pg.style.transform="scale("+sc+")"}
+function rptOpen(){const y=S.y,m=S.m;try{$("#rpt-pg").innerHTML=rptBuild(y,m)}catch(e){ask("Non sono riuscito a creare il report.",()=>{});return}RPT_TITLE="Agenda-Report-"+RPT_MES[m]+"-"+y;$("#rpt-t").textContent="Report "+RPT_MES[m]+" "+y;$("#rpt").classList.add("open");document.body.classList.add("rpt-open");rptFit()}
+function rptClose(){$("#rpt").classList.remove("open");document.body.classList.remove("rpt-open");if(RPT_OLD)document.title=RPT_OLD}
+let RPT_OLD="";
+function rptPrint(){RPT_OLD=document.title;if(RPT_TITLE)document.title=RPT_TITLE;window.print()}
+window.addEventListener("resize",()=>{if(document.body.classList.contains("rpt-open"))rptFit()});
+window.addEventListener("afterprint",()=>{if(RPT_OLD)document.title=RPT_OLD});
+
+/* ===== Backup e ripristino ===== */
+const bkLast=()=>{try{const v=+localStorage.getItem("agenda_ultimo_backup");if(!v)return"mai";const d=new Date(v);return pad(d.getDate())+"/"+pad(d.getMonth()+1)+"/"+d.getFullYear()+" alle "+pad(d.getHours())+":"+pad(d.getMinutes())}catch(e){return"mai"}};
+function bkExport(){
+  try{
+    const o={app:"agenda-lavoro",versione:1,esportato:new Date().toISOString(),dati:DB};
+    const blob=new Blob([JSON.stringify(o)],{type:"application/json"}),a=document.createElement("a"),t=new Date();
+    a.href=URL.createObjectURL(blob);
+    a.download="agenda-backup-"+t.getFullYear()+"-"+pad(t.getMonth()+1)+"-"+pad(t.getDate())+".json";
+    document.body.appendChild(a);a.click();
+    setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500);
+    try{localStorage.setItem("agenda_ultimo_backup",String(Date.now()))}catch(e){}
+    if(S.v==="bd")render();
+  }catch(e){ask("Non sono riuscito a creare il file di backup.",()=>{})}
+}
+function bkRead(inp){
+  const f=inp.files&&inp.files[0];if(!f)return;
+  const rd=new FileReader();
+  rd.onload=()=>{
+    inp.value="";
+    let o=null;try{o=JSON.parse(rd.result)}catch(e){}
+    const dt=o&&o.app==="agenda-lavoro"&&o.dati&&typeof o.dati==="object"&&o.dati.d&&typeof o.dati.d==="object"?o.dati:null;
+    if(!dt){ask("Il file non sembra un backup valido dell'agenda.",()=>{});return}
+    const ks=Object.keys(dt.d),yrs=ks.map(k=>+k.slice(0,4)).filter(Boolean),dd=o.esportato?new Date(o.esportato):null;
+    const when=dd&&!isNaN(dd)?pad(dd.getDate())+"/"+pad(dd.getMonth()+1)+"/"+dd.getFullYear()+" alle "+pad(dd.getHours())+":"+pad(dd.getMinutes()):"data non indicata";
+    ask("<b>Ripristina backup</b><br>File del "+when+": <b>"+ks.length+"</b> giorni salvati"+(yrs.length?" ("+Math.min(...yrs)+"–"+Math.max(...yrs)+")":"")+".<br>Ora nell'app: <b>"+Object.keys(DB.d||{}).length+"</b> giorni.<br>I dati attuali verranno <b>sostituiti</b>, anche sul cloud.",()=>{
+      DB=dt;DB.d=DB.d||{};DB.i=DB.i||{};DB.rt=DB.rt||{};DB.rf=DB.rf||{};DB.fs=DB.fs||{};
+      SEDI=Array.isArray(DB.s)?DB.s:SEDI0.slice();TURNI=Array.isArray(DB.t)?DB.t:TURNI0.slice();
+      fillTl();save(true);render();
+    });
+  };
+  rd.readAsText(f);
+}
+function resetSheet(){$("#sh").innerHTML='<h2>Cancellare tutto?</h2><p class="mu">Verranno cancellati giorni, saldi e rotazione, <b>anche dal cloud</b>. Non si può annullare. Se non l\'hai già fatto, esporta prima un backup.</p><label style="margin-top:10px">Per confermare scrivi CANCELLA<input id="rst-w" autocomplete="off" autocapitalize="characters"></label><p class="mu" id="rst-m" style="color:#D13438;font-weight:600"></p><div class="ac"><button data-a="rox">Annulla</button><button class="pr" data-a="rstg" style="background:#D13438">Cancella tutto</button></div>';$("#ov").classList.add("open")}
+
 function ask(msg,ok,no){S.cf=ok;S.cx=no;$("#cfm").innerHTML='<h2>Confermi?</h2><p class="mu">'+msg+'</p><div class="ac"><button data-cf="0">Annulla</button><button class="pr" data-cf="1">Conferma</button></div>';$("#cf").classList.add("open")}
 
 const RZ={d:["i giorni",()=>{DB.d={}}],i:["i saldi",()=>{DB.i={};DB.rt={}}],t:["i turni",()=>{delete DB.t;DB.fs={};TURNI=TURNI0.slice();fillTl()}],s:["le sedi",()=>{delete DB.s;SEDI=SEDI0.slice()}],r:["la rotazione",()=>{delete DB.ro}]};
@@ -745,6 +911,12 @@ else if(t.dataset.rt!==undefined)rsheet(+t.dataset.rt);
 else if(t.dataset.ra){S.ra=+t.dataset.ra;document.querySelectorAll("[data-ra]").forEach(b=>b.classList.toggle("on",+b.dataset.ra===S.ra))}
 else if(t.dataset.a==="imp")impAsk();
 else if(t.dataset.a==="bds")bdSave();
+else if(t.dataset.a==="rpt")rptOpen();
+else if(t.dataset.a==="rptp")rptPrint();
+else if(t.dataset.a==="rptx")rptClose();
+else if(t.dataset.a==="bkx")bkExport();
+else if(t.dataset.a==="bki"){const f=$("#bk-f");if(f)f.click()}
+else if(t.dataset.a==="rstg"){const w=(($("#rst-w")&&$("#rst-w").value)||"").trim().toUpperCase();if(w==="CANCELLA"){closeS();doReset()}else{const m=$("#rst-m");if(m)m.textContent="Scrivi CANCELLA per confermare."}}
 else if(t.dataset.a==="bdx"){PEND={};render()}
 else if(t.dataset.a==="rot")rotFromSheet();
 else if(t.dataset.a==="rocg"){const f=($("#ro-from")&&$("#ro-from").value)||todayKey();closeS();rotApplyFrom(f)}
@@ -752,7 +924,7 @@ else if(t.dataset.a==="rol")rolSheet();
 else if(t.dataset.a==="rox")closeS();
 else if(t.dataset.rz){const z=RZ[t.dataset.rz];ask('Ripulire?',()=>{z[1]();save();render()})}
 else if(t.dataset.a==="rof")rolGo();
-else if(t.dataset.a==="rst")ask('Cancellare tutto?',doReset);
+else if(t.dataset.a==="rst")resetSheet();
 else if(t.dataset.a==="rclr"){const k=S.y+"-"+pad(S.rmo+1);ask('Azzerare?',()=>{if(DB.rt)delete DB.rt[k];save();closeS();render()})}
 else if(t.dataset.a==="rsv"){const y=S.y,m=S.rmo,cur=rtv(y,m),add=$("#r-v").value.trim();let n=null;if(add)n=(S.ra||1)*parse(add);if(n===null)return;const k=y+"-"+pad(m+1);ask('Applicare?',()=>{DB.rt=DB.rt||{};if(n)DB.rt[k]=n;else delete DB.rt[k];save();closeS();render()})}
 else if(t.dataset.del){const q=t.dataset.del.split(":"),w=q[0],A=w==="t"?TURNI:SEDI;ask('Eliminare?',()=>{A.splice(+q[1],1);DB[w]=A;save();fillTl();render()})}
@@ -762,6 +934,7 @@ else if(t.dataset.a==="sv"){const v={t:S.dt||undefined,u:(S.dt&&S.dt!=="pr")?und
 Object.keys(v).forEach(q=>v[q]===undefined&&delete v[q]);if(v.t==="ri")v.m=1;if(Object.keys(v).length)DB.d[S.k]=v;else delete DB.d[S.k];save();closeS();render()}});
 
 document.addEventListener("input",e=>{pendSet(e.target)});
+document.addEventListener("change",e=>{if(e.target&&e.target.id==="bk-f")bkRead(e.target)});
 document.addEventListener("change",e=>{const t=e.target,i=ini(S.y);if(t.id==="ro-f"){const fn=$("#ro-fn");if(fn)fn.textContent=t.files&&t.files[0]?t.files[0].name:""}else if(t.dataset.f||t.dataset.e){pendSet(t)}else if(t.id==="r-m")rsheet(+t.value)});
 const fillTl=()=>{$("#tl").innerHTML=TURNI.map(t=>'<option value="'+t+'">').join("")};fillTl();
 
