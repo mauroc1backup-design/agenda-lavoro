@@ -161,6 +161,7 @@ tr.tt td{font-weight:700;border-bottom:0}
 
     <div id="auth-logged-area" style="display:none;margin-top:10px">
       <p class="mu" style="font-weight:600;color:#1F9D55">Connesso come: <span id="auth-user-email"></span></p>
+      <p id="sync-label" class="mu" style="font-size:11px;margin:-4px 0 10px;opacity:.8"></p>
       <div id="pw-change-box" style="display:none;margin:14px 0 6px;padding-top:12px;border-top:1px solid var(--ln);text-align:left">
         <p class="mu" id="pw-title" style="font-weight:600;margin-bottom:8px">Scegli la nuova password</p>
         <label style="margin-bottom:8px">Nuova password<input type="password" id="new-password" autocomplete="new-password" placeholder="almeno 8 caratteri"></label>
@@ -219,6 +220,7 @@ function showAuthState(email){
   d('pw-change-box', (logged && RECOVERY_LINK) ? 'block' : 'none');
   document.getElementById('auth-title').textContent = logged ? "Account" : (isRegMode ? "Crea un Account" : "Accedi");
   if(logged) document.getElementById('auth-user-email').textContent = email;
+  if(logged) updateSyncLabel();
 }
 
 async function openAuth(){
@@ -305,7 +307,7 @@ async function handleForgotPassword(e){
 
   try {
     const { data, error } = await supabaseClient.auth.resetPasswordForEmail(email, {
-      redirectTo: window.location.href,
+      redirectTo: location.origin + location.pathname,
     });
     if(error) throw error;
     alert("Email di recupero inviata! Controlla la tua casella di posta.");
@@ -530,6 +532,30 @@ $("#ov").classList.add("open")}
 
 const CYC="369 355 373 RTFL1 373 353|302 325 372 311 346 307|375 RTFL2 360 DFL04 336 DFL07|354 DFL07 311 331 307 RCA|315 353 377 350 348 357|DFL12 308 RTFL4 316 330 336|356 306 313 343 347 RCA|363 RTFL3 355 360 363 DFL03|DFL06 DFL02 362 365 302 DFL04|RTFL1 369 367 377 315 RCA|325 348 353 DFL07 343 DFL11|313 336 RTFL2 374 375 DFL06|DFL07 311 315 325 DFL01 311|362 350 365 RTFL3 DFL09 315|331 330 308 349 316 RCA|319 356 DFL09 313 367 RTFL4|349 RTFL1 DFL11 336 351 RTFL3|316 349 316 DFL06 RTFL2 354|353 354 306 372 311 RCA|307 315 348 363 350 DFL17|RTFL4 375 304 308 DFL06 342|351 331 DFL01 319 356 RTFL1|367 360 363 362 313 309|340 DFL06 340 373 338 RCA|377 373 RTFL1 351 353 DFL02|373 338 346 307 369 DFL05|DFL04 304 DFL02 DFL08 374 313|350 DFL11 356 315 354 306|336 351 350 346 DFL11 351|330 DFL04 349 RTFL4 304 308|DFL01 313 343 356 331 350|DFL02 365 RTFL3 355 360 RTFL2|311 362 DFL08 302 349 RCA|372 377 325 369 RTFL1 DFL10|365 DFL09 351 367 DFL07 DFL15|304 DFL08 330 RTFL2 340 DFL12|348 363 DFL07 354 RTFL3 348|RTFL2 347 319 353 365 DFL09|DFL10 374 302 348 RTFL4 304|347 372 369 DFL09 325 RCA|343 319 336 DFL11 DFL04 340|360 316 DFL04 330 DFL02 DFL01|308 343 347 DFL01 306 338|306 302 338 375 DFL08 346|DFL08 367 354 306 372 302|346 307 307 338 355 355|374 RTFL4 375 304 308 DFL08|355 DFL01 331 347 319 356|RTFL3 346 374 DFL02 377 330|338 340 DFL06 340 362 DFL13".split("|");
 function rotDay(y,m,d){const t=Date.UTC(y,m,d),o=DB.ro.m.split("-").map(Number),a=Date.UTC(o[0],o[1]-1,o[2]),w=(new Date(t).getUTCDay()+6)%7;if(w===6)return"RIP";const cy=DB.ro.cyc||CYC,L=cy.length,k=((Math.floor((t-a)/864e5/7)+DB.ro.k)%L+L)%L;return cy[k].split(" ")[w]}
+const todayKey=()=>{const t=new Date();return key(t.getFullYear(),t.getMonth(),t.getDate())};
+/* giorno compilato dalla rotazione e mai toccato a mano (riposi manuali hanno m:1) */
+const isAutoDay=d=>!!d&&(d.a===1||d.g===1||(d.t==="ri"&&!d.m&&Object.keys(d).length===1));
+/* applica la rotazione dal giorno "from" (AAAA-MM-GG) in avanti: sostituisce solo i giorni automatici, lascia il passato e le modifiche manuali */
+function rotApplyFrom(from){
+  if(!DB.ro) return;
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(from||"")) from=todayKey();
+  const fy=+from.slice(0,4);
+  let ly=Math.max(fy,S.y);
+  Object.keys(DB.d).forEach(k=>{const y=+k.slice(0,4);if(y>ly)ly=y});
+  const add=[];
+  for(let y=fy;y<=ly;y++){for(let m=0;m<12;m++){const nd=new Date(y,m+1,0).getDate();for(let d=1;d<=nd;d++){
+    const k=key(y,m,d);
+    if(k<from)continue;
+    const ex=DB.d[k];
+    if(ex){if(isAutoDay(ex))delete DB.d[k];else continue}
+    const c=rotDay(y,m,d);
+    if(c==="RIP"||c==="RCA")DB.d[k]={t:"ri",g:1};
+    else{DB.d[k]={t:"pr",u:c,a:1};if(!TURNI.map(String).includes(c)&&!add.includes(c))add.push(c)}
+  }}}
+  if(add.length){add.forEach(c=>TURNI.push(c));TURNI.sort((a,b)=>String(a).localeCompare(String(b),"it",{numeric:true}));DB.t=TURNI;fillTl()}
+  save();render();
+}
+function rotFromSheet(){$("#sh").innerHTML='<h2>Compila rotazione</h2><label style="margin-top:12px">Applica dal giorno<input id="ro-from" type="date" value="'+todayKey()+'"></label><p class="mu" style="font-size:12px;margin-top:8px">Da questa data in poi i turni compilati automaticamente vengono sostituiti con la rotazione. I giorni precedenti e quelli che hai modificato tu restano invariati.</p><div class="ac"><button data-a="rox">Annulla</button><button class="pr" data-a="rocg">Compila</button></div>';$("#ov").classList.add("open")}
 function rotApply(y){if(!DB.ro)return;const add=[];for(let m=0;m<12;m++){const nd=new Date(y,m+1,0).getDate();for(let d=1;d<=nd;d++){const k=key(y,m,d);if(DB.d[k])continue;const c=rotDay(y,m,d);if(c==="RIP")DB.d[k]={t:"ri"};else if(c==="RCA")DB.d[k]={t:"ri"};else{DB.d[k]={t:"pr",u:c,a:1};if(!TURNI.map(String).includes(c)&&!add.includes(c))add.push(c)}}}
 if(add.length){add.forEach(c=>TURNI.push(c));TURNI.sort((a,b)=>String(a).localeCompare(String(b),"it",{numeric:true}));DB.t=TURNI;fillTl()}save();render()}
 function rotParse(lines){let nd=31,sd=null,g="",pn=null;const P=[];
@@ -559,8 +585,8 @@ return r.P.filter(x=>{if(g&&x.g!=="SQ "+g)return false;const n=x.n.split(" ");re
 
 function loadPdf(){return new Promise((ok,ko)=>{if(window.pdfjsLib)return ok(window.pdfjsLib);const s=document.createElement("script");s.src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";s.onload=()=>{window.pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";ok(window.pdfjsLib)};s.onerror=()=>ko(new Error("Connessione assente"));document.head.appendChild(s)})}
 async function pdfRows(f){const lib=await loadPdf(),buf=await f.arrayBuffer(),doc=await lib.getDocument({data:buf}).promise,out=[];for(let p=1;p<=doc.numPages;p++){const tc=await(await doc.getPage(p)).getTextContent(),it=tc.items.filter(i=>i.str.trim()).map(i=>({s:i.str.trim(),x:i.transform[4],y:i.transform[5]})).sort((a,b)=>b.y-a.y),rows=[];for(const i of it){const r=rows[rows.length-1];if(r&&Math.abs(r.y-i.y)<7)r.t.push(i);else rows.push({y:i.y,t:[i]})}rows.forEach(r=>out.push(r.t.sort((a,b)=>a.x-b.x).map(i=>i.s).join(" ")))}return out}
-function rolSheet(){$("#sh").innerHTML='<h2>Carica rotazione</h2><label style="margin-top:12px">File PDF<input id="ro-f" type="file" accept=".pdf,application/pdf,*/*"></label><p class="mu" id="ro-fn" style="color:#1F9D55;font-weight:600"></p><label style="margin-top:10px">Il tuo nome (es. Cognome Nome)<input id="ro-n" autocomplete="off" placeholder="es. Rossi Mario"></label><p class="mu" id="ro-m" style="color:#D13438;font-weight:600"></p><div class="ac"><button data-a="rox">Annulla</button><button class="pr" data-a="rof">Carica</button></div>';$("#ov").classList.add("open")}
-async function rolGo(){const m=$("#ro-m"),q=$("#ro-n").value.trim(),fi=$("#ro-f"),f=fi&&fi.files?fi.files[0]:null,er=s=>{if(m){m.style.color="#D13438";m.textContent=s}};
+function rolSheet(){$("#sh").innerHTML='<h2>Carica rotazione</h2><label style="margin-top:12px">File PDF<input id="ro-f" type="file" accept=".pdf,application/pdf,*/*"></label><p class="mu" id="ro-fn" style="color:#1F9D55;font-weight:600"></p><label style="margin-top:10px">Il tuo nome (es. Cognome Nome)<input id="ro-n" autocomplete="off" placeholder="es. Rossi Mario"></label><label style="margin-top:10px">Applica dal giorno<input id="ro-from" type="date" value="'+todayKey()+'"></label><p class="mu" style="font-size:12px;margin-top:6px">Da questa data in poi i turni compilati automaticamente vengono sostituiti. Il passato e le tue modifiche restano invariati.</p><p class="mu" id="ro-m" style="color:#D13438;font-weight:600"></p><div class="ac"><button data-a="rox">Annulla</button><button class="pr" data-a="rof">Carica</button></div>';$("#ov").classList.add("open")}
+async function rolGo(){const m=$("#ro-m"),q=$("#ro-n").value.trim(),fi=$("#ro-f"),f=fi&&fi.files?fi.files[0]:null,fr=($("#ro-from")&&$("#ro-from").value)||todayKey(),er=s=>{if(m){m.style.color="#D13438";m.textContent=s}};
 if(!f)return er("Scegli il file PDF.");
 if(!q)return er("Scrivi il tuo nome.");
 if(m){m.style.color="var(--ink)";m.textContent="Lettura in corso…";}
@@ -570,7 +596,7 @@ const g=(q.match(/SQ\s*(\d+)/i)||[])[1],c=rotFindName(r,q.replace(/SQ\s*\d+/i,""
 if(!c.length)return er("Nome non trovato.");
 const b=rotBuild(r,c[0]);if(b.err)return er(b.err);
 if(m)m.textContent="";
-ask('Trovato: '+esc(c[0].n)+', gruppo '+c[0].g+'. Caricare?',()=>{DB.ro=b.ro;closeS();rotApply(S.y)})}
+ask('Trovato: '+esc(c[0].n)+', gruppo '+c[0].g+'. Caricare?',()=>{DB.ro=b.ro;closeS();rotApplyFrom(fr)})}
 
 function doReset(){DB.d={};DB.i={};DB.rt={};DB.rf={};DB.fs={};delete DB.ro;delete DB.s;delete DB.t;SEDI=SEDI0.slice();TURNI=TURNI0.slice();fillTl();save(true);render()}
 
@@ -630,6 +656,26 @@ const RZ={d:["i giorni",()=>{DB.d={}}],i:["i saldi",()=>{DB.i={};DB.rt={}}],t:["
 
 let syncing=false;
 /* Sincronizza telefono e cloud: scarica, unisce se ci sono modifiche non ancora caricate, poi carica */
+const SYNC_KEY="agenda_ultima_sync";
+function updateSyncLabel(){
+  const el=document.getElementById('sync-label'); if(!el) return;
+  let t="Non ancora sincronizzato";
+  try{
+    const v=+localStorage.getItem(SYNC_KEY);
+    if(v){
+      const dt=new Date(v), now=new Date();
+      const hm=pad(dt.getHours())+":"+pad(dt.getMinutes());
+      const same=dt.toDateString()===now.toDateString();
+      t="Ultima sincronizzazione "+(same?"":"il "+pad(dt.getDate())+"/"+pad(dt.getMonth()+1)+" ")+"alle ore "+hm;
+    }
+  }catch(e){}
+  if(isMerge()) t+=" · modifiche in attesa";
+  el.textContent=t;
+}
+function markSynced(){
+  try{localStorage.setItem(SYNC_KEY,String(Date.now()))}catch(e){}
+  updateSyncLabel();
+}
 async function loadUserDataCloud(userId){
   if(!supabaseClient||syncing) return;
   syncing=true;
@@ -650,6 +696,7 @@ async function loadUserDataCloud(userId){
       if(r.error) throw r.error;
       setMerge(false);
     }
+    markSynced();
   } catch(e){
     /* offline o errore: i dati restano sul telefono e si riprova appena possibile */
   } finally { syncing = false; }
@@ -658,12 +705,13 @@ async function saveUserDataCloud(force){
   if(!supabaseClient) return;
   try {
     const { data: { session } } = await supabaseClient.auth.getSession();
-    if(!session){ setMerge(true); return; }
+    if(!session){ setMerge(true); updateSyncLabel(); return; }
     if(isMerge() && !force){ await loadUserDataCloud(session.user.id); return; }
     const { error } = await supabaseClient.from('user_agendas').upsert({ user_id: session.user.id, content: DB }, { onConflict: 'user_id' });
     if(error) throw error;
     if(force) setMerge(false);
-  } catch(e){ setMerge(true); }
+    markSynced();
+  } catch(e){ setMerge(true); updateSyncLabel(); }
 }
 async function trySync(){
   if(!supabaseClient||!isMerge()) return;
@@ -688,7 +736,8 @@ else if(t.dataset.cf){const f=t.dataset.cf==="1"?S.cf:S.cx;S.cf=S.cx=null;$("#cf
 else if(t.dataset.rt!==undefined)rsheet(+t.dataset.rt);
 else if(t.dataset.ra){S.ra=+t.dataset.ra;document.querySelectorAll("[data-ra]").forEach(b=>b.classList.toggle("on",+b.dataset.ra===S.ra))}
 else if(t.dataset.a==="imp")ask('Importare residui?',imp);
-else if(t.dataset.a==="rot")ask('Compilare?',()=>rotApply(S.y));
+else if(t.dataset.a==="rot")rotFromSheet();
+else if(t.dataset.a==="rocg"){const f=($("#ro-from")&&$("#ro-from").value)||todayKey();closeS();rotApplyFrom(f)}
 else if(t.dataset.a==="rol")rolSheet();
 else if(t.dataset.a==="rox")closeS();
 else if(t.dataset.rz){const z=RZ[t.dataset.rz];ask('Ripulire?',()=>{z[1]();save();render()})}
@@ -700,7 +749,7 @@ else if(t.dataset.del){const q=t.dataset.del.split(":"),w=q[0],A=w==="t"?TURNI:S
 else if(t.dataset.a==="addt"||t.dataset.a==="addz"){const z=t.dataset.a==="addz",v=$(z?"#n-z":"#n-t").value.trim();if(!v)return;const A=z?SEDI:TURNI,vv=z?v.toUpperCase():v;if(A.map(String).includes(vv))return;const fs=z?"":$("#n-f").value;ask('Aggiungere?',()=>{A.push(vv);if(fs){DB.fs=DB.fs||{};DB.fs[vv]=fs}if(!z)A.sort((a,b)=>String(a).localeCompare(String(b),"it",{numeric:true}));DB[z?"s":"t"]=A;save();fillTl();render()})}
 else if(t.dataset.a==="clr"){delete DB.d[S.k];save();closeS();render()}
 else if(t.dataset.a==="sv"){const v={t:S.dt||undefined,u:(S.dt&&S.dt!=="pr")?undefined:($("#f-u").value.trim()||undefined),b:$("#f-b").value.trim().toUpperCase()||undefined,o:parse($("#f-o").value)||undefined,on:$("#f-on").value.trim()||undefined,c:$("#f-c").checked||undefined,r:$("#f-r").value||undefined};
-Object.keys(v).forEach(q=>v[q]===undefined&&delete v[q]);if(Object.keys(v).length)DB.d[S.k]=v;else delete DB.d[S.k];save();closeS();render()}});
+Object.keys(v).forEach(q=>v[q]===undefined&&delete v[q]);if(v.t==="ri")v.m=1;if(Object.keys(v).length)DB.d[S.k]=v;else delete DB.d[S.k];save();closeS();render()}});
 
 document.addEventListener("change",e=>{const t=e.target,i=ini(S.y);if(t.id==="ro-f"){const fn=$("#ro-fn");if(fn)fn.textContent=t.files&&t.files[0]?t.files[0].name:""}else if(t.dataset.f){const k=t.dataset.f,nv=Math.max(0,+t.value||0);i[k]=nv;save();render()}else if(t.dataset.e){i.eo=parse(t.value);save();render()}else if(t.id==="r-m")rsheet(+t.value)});
 const fillTl=()=>{$("#tl").innerHTML=TURNI.map(t=>'<option value="'+t+'">').join("")};fillTl();
