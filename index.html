@@ -138,17 +138,16 @@ tr.tt td{font-weight:700;border-bottom:0}
 .rp-wk{margin-bottom:3px}
 .rp-wk span{text-align:center;font-size:9.5px;font-weight:700;color:#5B6B7B}
 .rp-wk span.we{color:#D13438}
-.rp-c{height:50px;border:1.5px solid #DCE1E8;border-radius:6px;padding:3px 4px;display:flex;flex-direction:column;overflow:hidden}
+.rp-c{min-height:48px;border:1.5px solid #DCE1E8;border-radius:6px;padding:3px 4px;display:flex;flex-direction:column}
 .rp-c.e{border:0}
 .rp-n{font-size:11px;font-weight:800}
 .rp-n.we{color:#D13438}
 .rp-top{display:flex;justify-content:space-between;align-items:center;gap:3px}
 .rp-l{color:#fff;font-size:8.5px;font-weight:800;padding:1px 5px;border-radius:8px;white-space:nowrap}
-.rp-b{margin-top:auto}
-.rp-bl{display:flex;gap:3px;align-items:center;white-space:nowrap;height:13px}
-.rp-on{font-size:9.5px;font-weight:800;color:#B7791F}
-.rp-bus{font-size:9px;font-weight:700;color:#12263A;background:#DCE9F7;border-radius:3px;padding:0 3px}
-.rp-u{font-size:10.5px;font-weight:700;color:#12263A}
+.rp-b{margin-top:auto;padding-top:2px;display:flex;flex-wrap:wrap;gap:1px 3px;align-items:center}
+.rp-on{font-size:9.5px;font-weight:800;color:#B7791F;white-space:nowrap}
+.rp-bus{font-size:9px;font-weight:700;color:#12263A;background:#DCE9F7;border-radius:3px;padding:0 3px;white-space:normal;word-break:break-word;line-height:1.2;max-width:100%}
+.rp-u{font-size:10.5px;font-weight:700;color:#12263A;white-space:nowrap}
 .rp-o{font-size:9px;font-weight:800;color:#B7791F}
 .rp-r{font-size:8.5px;font-weight:800;color:#12263A;background:#E5E9EF;border-radius:3px;padding:0 3px}
 .rp-lg{display:flex;flex-wrap:wrap;gap:3px 12px;margin-top:5px;font-size:9.5px;color:#5B6B7B}
@@ -764,8 +763,8 @@ function rptBuild(y,m){
     if(x.t==="pr"&&x.a){const f=fas(k,x.u),fc=f&&FC[f];c=fc?fc[2]:"#64748B";l=fc?fc[1]:"Turno"}
     else if(t==="pr"){c=RPT_HUE.pr;l="Presente"}
     else if(t&&RPT_HUE[t]){c=RPT_HUE[t];l=T[t][1]}
-    const r1=(x.u?'<span class="rp-u">'+esc(String(x.u))+'</span>':'')+(x.on?'<span class="rp-on">'+esc(String(x.on).slice(0,6))+'</span>':'')+(x.b?'<span class="rp-bus">'+esc(String(x.b).slice(0,6))+'</span>':''),r2=(x.o?'<span class="rp-o">+'+fmt(x.o)+'</span>':'')+(x.r?'<span class="rp-r">'+esc(String(x.r).slice(0,3).toUpperCase())+'</span>':'');
-    cells+='<div class="rp-c"'+(c?' style="border-color:'+c+';background:'+A(c,.13)+'"':'')+'><div class="rp-top"><span class="rp-n'+(we?' we':'')+'">'+d+'</span>'+(c?'<span class="rp-l" style="background:'+c+'">'+esc(l)+'</span>':'')+'</div><div class="rp-b">'+(r1?'<div class="rp-bl">'+r1+'</div>':'')+(r2?'<div class="rp-bl">'+r2+'</div>':'')+'</div></div>';
+    const chips=(x.u?'<span class="rp-u">'+esc(String(x.u))+'</span>':'')+(x.on?'<span class="rp-on">'+esc(String(x.on).slice(0,24))+'</span>':'')+(x.b?'<span class="rp-bus">'+esc(String(x.b).slice(0,30))+'</span>':'')+(x.o?'<span class="rp-o">+'+fmt(x.o)+'</span>':'')+(x.r?'<span class="rp-r">'+esc(String(x.r).slice(0,3).toUpperCase())+'</span>':'');
+    cells+='<div class="rp-c"'+(c?' style="border-color:'+c+';background:'+A(c,.13)+'"':'')+'><div class="rp-top"><span class="rp-n'+(we?' we':'')+'">'+d+'</span>'+(c?'<span class="rp-l" style="background:'+c+'">'+esc(l)+'</span>':'')+'</div>'+(chips?'<div class="rp-b">'+chips+'</div>':'')+'</div>';
   }
   const wk="LMMGVSD".split("").map((c,q)=>'<span'+(q>4?' class="we"':'')+'>'+c+'</span>').join("");
   const lg=[["Mattina",FC.m[2]],["Pomeriggio",FC.p[2]],["Centrale",FC.c[2]],["Presenza confermata",RPT_HUE.pr],["Ferie / festività / assenze",RPT_HUE.fe],["RCO / RCA",RPT_HUE.rc]].map(a=>'<span><i style="--c:'+a[1]+'"></i>'+a[0]+'</span>').join("")+'<span><b style="color:#B7791F">+h:mm</b> straordinario</span><span><b style="color:#B7791F">ST1</b> turno straordinario</span><span><b class="rp-bus">123</b> autobus</span><span><b class="rp-r">ABC</b> sede di trasferta</span>';
@@ -794,7 +793,7 @@ function rptBuild(y,m){
   '<div class="rp-f">Residui = iniziali − usati (prima i giorni dell\'anno precedente). Presenze e assenze contano solo se confermate.</div>'
 }
 function rptFit(){const rs=document.querySelector("#rpt .rsize"),pg=$("#rpt-pg");if(!rs||!pg)return;const sc=Math.min(1,(window.innerWidth-16)/794);rs.style.width=(794*sc)+"px";rs.style.height=(1122*sc)+"px";pg.style.transform="scale("+sc+")"}
-function rptOpen(){const y=S.y,m=S.m;try{$("#rpt-pg").innerHTML=rptBuild(y,m)}catch(e){ask("Non sono riuscito a creare il report.",()=>{});return}RPT_TITLE="Agenda-Report-"+RPT_MES[m]+"-"+y;$("#rpt-t").textContent="Report "+RPT_MES[m]+" "+y;$("#rpt").classList.add("open");document.body.classList.add("rpt-open");rptFit()}
+function rptOpen(){const y=S.y,m=S.m;try{$("#rpt-pg").innerHTML='<div class="rbody">'+rptBuild(y,m)+'</div>'}catch(e){ask("Non sono riuscito a creare il report.",()=>{});return}RPT_TITLE="Agenda-Report-"+RPT_MES[m]+"-"+y;$("#rpt-t").textContent="Report "+RPT_MES[m]+" "+y;$("#rpt").classList.add("open");document.body.classList.add("rpt-open");rptFit();const bd=document.querySelector("#rpt .rbody");if(bd){bd.style.zoom=1;const H=bd.offsetHeight,mx=1118-56;if(H>mx)bd.style.zoom=(mx/H).toFixed(3)}}
 function rptClose(){$("#rpt").classList.remove("open");document.body.classList.remove("rpt-open");if(RPT_OLD)document.title=RPT_OLD}
 let RPT_OLD="";
 function rptPrint(){RPT_OLD=document.title;if(RPT_TITLE)document.title=RPT_TITLE;window.print()}
